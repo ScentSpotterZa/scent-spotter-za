@@ -1,7 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { Heart, User, Menu } from "lucide-react";
+import { Heart, User, Menu, LogOut } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthDialog } from "@/components/AuthDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Header = () => {
+  const { user, signOut } = useAuth();
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-4">
@@ -34,10 +46,32 @@ export const Header = () => {
               </span>
             </Button>
             
-            <Button variant="minimal" size="sm" className="hidden sm:flex">
-              <User className="h-4 w-4" />
-              Sign In
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="minimal" size="sm" className="hidden sm:flex">
+                    <User className="h-4 w-4" />
+                    {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="minimal" 
+                size="sm" 
+                className="hidden sm:flex"
+                onClick={() => setAuthDialogOpen(true)}
+              >
+                <User className="h-4 w-4" />
+                Sign In
+              </Button>
+            )}
             
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
@@ -45,6 +79,8 @@ export const Header = () => {
           </div>
         </div>
       </div>
+      
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </header>
   );
 };

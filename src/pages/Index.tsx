@@ -4,61 +4,14 @@ import { PerfumeCard } from "@/components/PerfumeCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Sparkles, Award, Clock } from "lucide-react";
-import heroImage from "@/assets/hero-perfume.jpg";
-
-// Mock data for demonstration
-const trendingPerfumes = [
-  {
-    id: "1",
-    name: "Sauvage Eau de Toilette",
-    brand: "Dior",
-    price: "R1,250",
-    rating: 4.8,
-    image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=400&fit=crop",
-    notes: ["Bergamot", "Sichuan Pepper", "Cedar"],
-    longevity: 4,
-    sillage: 5,
-    projection: 4
-  },
-  {
-    id: "2", 
-    name: "Aventus",
-    brand: "Creed",
-    price: "R4,200",
-    rating: 4.9,
-    image: "https://images.unsplash.com/photo-1565030209074-da3958db50b2?w=400&h=400&fit=crop",
-    notes: ["Pineapple", "Birch", "Oakmoss"],
-    longevity: 5,
-    sillage: 5,
-    projection: 5
-  },
-  {
-    id: "3",
-    name: "Black Opium",
-    brand: "Yves Saint Laurent", 
-    price: "R1,680",
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=400&h=400&fit=crop",
-    notes: ["Coffee", "Vanilla", "White Flowers"],
-    longevity: 4,
-    sillage: 4,
-    projection: 3
-  },
-  {
-    id: "4",
-    name: "Oud Wood",
-    brand: "Tom Ford",
-    price: "R3,500",
-    rating: 4.6,
-    image: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=400&h=400&fit=crop",
-    notes: ["Oud", "Sandalwood", "Cedar"],
-    longevity: 5,
-    sillage: 3,
-    projection: 3
-  }
-];
+import { useTrendingPerfumes } from "@/hooks/usePerfumes";
+import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { data: trendingPerfumes, isLoading } = useTrendingPerfumes(4);
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -68,7 +21,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
         <div className="absolute top-0 right-0 w-1/2 h-full opacity-20">
           <img 
-            src={heroImage}
+            src="https://images.unsplash.com/photo-1594035910387-fea47794261f?w=800&h=600&fit=crop"
             alt="Luxury perfumes" 
             className="w-full h-full object-cover"
           />
@@ -162,20 +115,31 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingPerfumes.map((perfume, index) => (
-              <div 
-                key={perfume.id} 
-                className="animate-fade-in" 
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <PerfumeCard perfume={perfume} />
-              </div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading trending fragrances...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {trendingPerfumes?.map((perfume, index) => (
+                <div 
+                  key={perfume.id} 
+                  className="animate-fade-in" 
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <PerfumeCard perfume={perfume} />
+                </div>
+              ))}
+            </div>
+          )}
           
           <div className="text-center mt-12">
-            <Button variant="hero" size="lg">
+            <Button 
+              variant="hero" 
+              size="lg"
+              onClick={() => navigate("/search")}
+            >
               Explore All Fragrances
               <Sparkles className="h-5 w-5" />
             </Button>

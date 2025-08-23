@@ -2,14 +2,27 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export const SearchBar = () => {
+interface SearchBarProps {
+  onSearch?: (query: string) => void;
+  defaultValue?: string;
+}
+
+export const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Searching for:", searchQuery);
-    // TODO: Implement search functionality
+    const query = searchQuery.trim();
+    if (query) {
+      if (onSearch) {
+        onSearch(query);
+      } else {
+        navigate(`/search?q=${encodeURIComponent(query)}`);
+      }
+    }
   };
 
   return (
@@ -51,7 +64,7 @@ export const SearchBar = () => {
       
       {/* Quick search suggestions */}
       <div className="flex flex-wrap gap-2 mt-4 justify-center">
-        {["Tom Ford", "Creed", "Dior Sauvage", "Chanel", "YSL"].map((suggestion) => (
+        {["Tom Ford", "Creed", "Dior", "Chanel", "YSL"].map((suggestion) => (
           <Button 
             key={suggestion} 
             variant="search" 
