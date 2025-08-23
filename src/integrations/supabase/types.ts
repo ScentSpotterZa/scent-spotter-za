@@ -14,7 +14,228 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analytics: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          perfume_id: string | null
+          search_query: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          perfume_id?: string | null
+          search_query?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          perfume_id?: string | null
+          search_query?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfumes: {
+        Row: {
+          affiliate_clicks: number | null
+          amazon_asin: string | null
+          amazon_url: string | null
+          brand: string
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          fragrantica_url: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          last_scraped_at: string | null
+          longevity: number | null
+          name: string
+          notes: string[] | null
+          occasion: string[] | null
+          price: number | null
+          projection: number | null
+          season: string[] | null
+          sillage: number | null
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          affiliate_clicks?: number | null
+          amazon_asin?: string | null
+          amazon_url?: string | null
+          brand: string
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          fragrantica_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          last_scraped_at?: string | null
+          longevity?: number | null
+          name: string
+          notes?: string[] | null
+          occasion?: string[] | null
+          price?: number | null
+          projection?: number | null
+          season?: string[] | null
+          sillage?: number | null
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          affiliate_clicks?: number | null
+          amazon_asin?: string | null
+          amazon_url?: string | null
+          brand?: string
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          fragrantica_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          last_scraped_at?: string | null
+          longevity?: number | null
+          name?: string
+          notes?: string[] | null
+          occasion?: string[] | null
+          price?: number | null
+          projection?: number | null
+          season?: string[] | null
+          sillage?: number | null
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          id: string
+          longevity_rating: number | null
+          perfume_id: string
+          projection_rating: number | null
+          rating: number
+          review_text: string | null
+          sillage_rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          longevity_rating?: number | null
+          perfume_id: string
+          projection_rating?: number | null
+          rating: number
+          review_text?: string | null
+          sillage_rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          longevity_rating?: number | null
+          perfume_id?: string
+          projection_rating?: number | null
+          rating?: number
+          review_text?: string | null
+          sillage_rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          perfume_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          perfume_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          perfume_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
