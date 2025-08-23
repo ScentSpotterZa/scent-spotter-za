@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Perfume } from "@/hooks/usePerfumes";
+import { useAuth } from "@/hooks/useAuth";
+import { useWishlist } from "@/hooks/useWishlist";
+import { appendAmazonTag } from "@/lib/affiliate";
 
 interface PerfumeCardProps {
   perfume: Perfume;
@@ -12,10 +15,11 @@ interface PerfumeCardProps {
 
 export const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isWishlisted, toggleWishlist } = useWishlist(perfume.id);
 
   const handleAmazonClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
     // Track affiliate click
     await supabase.from("analytics").insert({
       event_type: "affiliate_click",
@@ -28,9 +32,10 @@ export const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
       .update({ affiliate_clicks: (perfume.affiliate_clicks || 0) + 1 })
       .eq("id", perfume.id);
 
-    // Open Amazon link
+    // Open Amazon link with affiliate tag
     if (perfume.amazon_url) {
-      window.open(perfume.amazon_url, "_blank");
+      const tagged = appendAmazonTag(perfume.amazon_url);
+      window.open(tagged, "_blank");
     } else {
       toast.error("Amazon link not available");
     }
@@ -38,6 +43,20 @@ export const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
 
   const handleCardClick = () => {
     navigate(`/perfume/${perfume.id}`);
+  };
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please sign in to use wishlist");
+      return;
+    }
+    const res = await toggleWishlist();
+    if (!res.ok) {
+      toast.error(typeof res.reason === 'string' ? res.reason : "Could not update wishlist");
+    } else {
+      toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
+    }
   };
 
   const formatPrice = (price: number | null, currency: string | null) => {
@@ -69,8 +88,13 @@ export const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             </h3>
             <p className="text-muted-foreground text-sm font-medium">{perfume.brand}</p>
           </div>
-          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Heart className="h-4 w-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            onClick={handleWishlistClick}
+          >
+            <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-accent text-accent' : ''}`} />
           </Button>
         </div>
 
