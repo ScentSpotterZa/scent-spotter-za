@@ -76,11 +76,9 @@ const PerfumeDetail = () => {
   };
 
   const handleFragranticaClick = () => {
-    if (perfume.fragrantica_url) {
-      window.open(perfume.fragrantica_url, "_blank");
-    } else {
-      toast.error("Fragrantica link not available");
-    }
+    const fallbackQuery = encodeURIComponent(`${perfume.brand} ${perfume.name}`);
+    const url = perfume.fragrantica_url || `https://www.fragrantica.com/search/?query=${fallbackQuery}`;
+    window.open(url, "_blank");
   };
 
   const formatPrice = (price: number | null, currency: string | null) => {
