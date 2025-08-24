@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "scrape:images": "node scripts/scrapeAmazonImages.js",
-    "scrape:images:asin": "node scripts/scrapeAmazonImages.js"
+    "scrape:images:asin": "node scripts/scrapeAmazonImages.js",
+    "images:apply-overrides": "node scripts/applyImageOverrides.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
