@@ -119,10 +119,24 @@ async function parsePage(page) {
 	return items;
 }
 
+async function setAmazonCookies(page) {
+	const cookies = [];
+	if (process.env.AMZ_COOKIE_SESSION_ID) cookies.push({ name: 'session-id', value: process.env.AMZ_COOKIE_SESSION_ID, domain: 'www.amazon.co.za', path: '/', httpOnly: false });
+	if (process.env.AMZ_COOKIE_SESSION_ID_TIME) cookies.push({ name: 'session-id-time', value: process.env.AMZ_COOKIE_SESSION_ID_TIME, domain: 'www.amazon.co.za', path: '/', httpOnly: false });
+	if (process.env.AMZ_COOKIE_SESSION_TOKEN) cookies.push({ name: 'session-token', value: process.env.AMZ_COOKIE_SESSION_TOKEN, domain: 'www.amazon.co.za', path: '/', httpOnly: true });
+	if (process.env.AMZ_COOKIE_UBID_ACZA) cookies.push({ name: 'ubid-acza', value: process.env.AMZ_COOKIE_UBID_ACZA, domain: 'www.amazon.co.za', path: '/', httpOnly: false });
+	if (cookies.length > 0) {
+		await page.setCookie(...cookies);
+	}
+}
+
 async function scrapeQuery(browser, query, pages, dryRun, delayMs) {
 	const page = await browser.newPage();
 	await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
 	await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17 Mobile/15E148 Safari/604.1');
+	await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60000 });
+	await setAmazonCookies(page);
+	await page.reload({ waitUntil: 'domcontentloaded' });
 	let totalFound = 0, totalInserted = 0, totalUpdated = 0;
 	for (let p = 1; p <= pages; p++) {
 		const url = `${BASE}/s?k=${encodeURIComponent(query)}&page=${p}`;
