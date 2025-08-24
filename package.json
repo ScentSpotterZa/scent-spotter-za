@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "scrape:images": "node scripts/scrapeAmazonImages.js",
     "scrape:images:asin": "node scripts/scrapeAmazonImages.js",
-    "images:apply-overrides": "node scripts/applyImageOverrides.js"
+    "images:apply-overrides": "node scripts/applyImageOverrides.js",
+    "scrape:catalog": "node scripts/scrapeAmazonCatalog.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
