@@ -88,6 +88,43 @@ async function autoScroll(page, steps = 8, stepDelay = 300) {
 	}
 }
 
+async function setDeliveryPostcode(page, postcode) {
+	try {
+		// Open location popover
+		const openSelectors = [
+			'#nav-global-location-popover-link',
+			'#glow-ingress-block',
+			'a#nav-global-location-popover-link'
+		];
+		for (const sel of openSelectors) {
+			const el = await page.$(sel);
+			if (el) { await el.click({ delay: 50 }); await sleep(600); break; }
+		}
+		// Enter postcode
+		const inputSelectors = ['#GLUXZipUpdateInput', '#GLUXPostalCode', 'input[name="zipCode"]'];
+		for (const sel of inputSelectors) {
+			const input = await page.$(sel);
+			if (input) {
+				await input.click({ clickCount: 3 });
+				await input.type(postcode, { delay: 50 });
+				break;
+			}
+		}
+		// Apply
+		const applySelectors = [
+			'#GLUXZipUpdate input[type="submit"]',
+			'#GLUXZipUpdate .a-button-input',
+			'input#GLUXConfirmClose',
+			'input[name="glowDoneButton"]',
+			'button[name="glowDoneButton"]'
+		];
+		for (const sel of applySelectors) {
+			const btn = await page.$(sel);
+			if (btn) { await btn.click({ delay: 50 }); await sleep(800); break; }
+		}
+	} catch {}
+}
+
 async function parsePage(page) {
 	await page.waitForSelector('div.s-main-slot', { timeout: 15000 });
 	const items = await page.$$eval('div.s-main-slot div.s-result-item[data-asin]', nodes => {
@@ -137,6 +174,8 @@ async function scrapeQuery(browser, query, pages, dryRun, delayMs) {
 	await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60000 });
 	await setAmazonCookies(page);
 	await page.reload({ waitUntil: 'domcontentloaded' });
+	await acceptCookies(page);
+	await setDeliveryPostcode(page, process.env.AMZ_POSTAL_CODE || '0046');
 	let totalFound = 0, totalInserted = 0, totalUpdated = 0;
 	for (let p = 1; p <= pages; p++) {
 		const url = `${BASE}/s?k=${encodeURIComponent(query)}&page=${p}`;
