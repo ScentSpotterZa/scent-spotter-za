@@ -4,6 +4,8 @@ import { fetch } from 'undici';
 import * as cheerio from 'cheerio';
 
 const BASE = 'https://www.amazon.co.za';
+const SCRAPE_API = 'https://scrape.abstractapi.com/v1/';
+const SCRAPE_KEY = process.env.SCRAPE_API_KEY;
 
 function sleep(ms) {
 	return new Promise(r => setTimeout(r, ms));
@@ -38,17 +40,26 @@ function toAbsoluteUrl(pathOrUrl) {
 	}
 }
 
+async function fetchViaScrapeApi(targetUrl) {
+	const url = `${SCRAPE_API}?api_key=${SCRAPE_KEY}&url=${encodeURIComponent(targetUrl)}`;
+	const res = await fetch(url);
+	if (!res.ok) throw new Error(`Scrape API failed ${res.status}`);
+	return await res.text();
+}
+
 async function fetchSearchPage(query, page = 1) {
-	const url = `${BASE}/s?k=${encodeURIComponent(query)}&page=${page}`;
-	const res = await fetch(url, {
+	const target = `${BASE}/s?k=${encodeURIComponent(query)}&page=${page}`;
+	if (SCRAPE_KEY) {
+		return await fetchViaScrapeApi(target);
+	}
+	const res = await fetch(target, {
 		headers: {
 			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
 			'Accept-Language': 'en-ZA,en;q=0.9',
 		},
 	});
-	if (!res.ok) throw new Error(`Failed search ${res.status} for ${url}`);
-	const html = await res.text();
-	return html;
+	if (!res.ok) throw new Error(`Failed search ${res.status} for ${target}`);
+	return await res.text();
 }
 
 function parseResults(html, fallbackBrandFromQuery) {
@@ -62,7 +73,6 @@ function parseResults(html, fallbackBrandFromQuery) {
 		const href = $(el).find('h2 a.a-link-normal').attr('href');
 		const url = toAbsoluteUrl(href);
 		const img = $(el).find('img.s-image').attr('src') || $(el).find('img.s-image').attr('data-src') || null;
-		// Price can be missing on listing
 		const whole = $(el).find('span.a-price span.a-price-whole').first().text().replace(/[^0-9]/g, '');
 		const frac = $(el).find('span.a-price span.a-price-fraction').first().text().replace(/[^0-9]/g, '');
 		let price = null;
@@ -70,7 +80,6 @@ function parseResults(html, fallbackBrandFromQuery) {
 			const p = parseFloat(`${whole}.${frac || '00'}`);
 			if (!Number.isNaN(p)) price = p;
 		}
-		// Try derive brand from title, else from query
 		let brand = null;
 		if (fallbackBrandFromQuery) {
 			brand = fallbackBrandFromQuery.replace(/\s*perfume\s*$/i, '');
@@ -81,7 +90,6 @@ function parseResults(html, fallbackBrandFromQuery) {
 }
 
 async function upsertPerfume(item) {
-	// Find existing by amazon_asin
 	const { data: existing, error: findErr } = await supabaseAdmin
 		.from('perfumes')
 		.select('id, name, brand, amazon_asin')
@@ -89,7 +97,6 @@ async function upsertPerfume(item) {
 		.limit(1)
 		.maybeSingle();
 	if (findErr) throw findErr;
-
 	const payload = {
 		name: item.title,
 		brand: item.brand || item.title.split(' ')[0],
@@ -101,7 +108,6 @@ async function upsertPerfume(item) {
 		is_available: true,
 		last_scraped_at: new Date().toISOString(),
 	};
-
 	if (!existing) {
 		const { error } = await supabaseAdmin.from('perfumes').insert(payload);
 		if (error) throw error;
@@ -131,7 +137,7 @@ async function scrapeQuery(query, pages, dryRun, delayMs) {
 				} catch (e) {
 					console.error('Upsert error:', e.message);
 				}
-				await sleep(200); // light throttle per item
+				await sleep(200);
 			}
 			await sleep(delayMs);
 		} catch (e) {
@@ -146,7 +152,7 @@ async function main() {
 	const queries = query ? [query] : brands;
 	let grandFound = 0, grandInserted = 0, grandUpdated = 0;
 	for (const q of queries) {
-		console.log(`Scraping: ${q} (pages=${pages}, dry=${dryRun})`);
+		console.log(`Scraping: ${q} (pages=${pages}, dry=${dryRun}, via=${SCRAPE_KEY ? 'ScrapeAPI' : 'direct'})`);
 		const res = await scrapeQuery(q, pages, dryRun, delayMs);
 		console.log(`Result for ${q}:`, res);
 		grandFound += res.totalFound; grandInserted += res.totalInserted; grandUpdated += res.totalUpdated;
