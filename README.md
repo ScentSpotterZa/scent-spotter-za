@@ -1,73 +1,119 @@
-# Welcome to your Lovable project
+# FragranceFinder.co.za
 
-## Project info
+A modern, mobile‑first perfume discovery web app for South Africa. Browse fragrances, view stats (longevity, sillage, projection), and buy via Amazon ZA affiliate links.
 
-**URL**: https://lovable.dev/projects/06e3d96e-eb7e-4c57-b01a-a567f44d583e
+## Features
 
-## How can I edit this code?
+- Search: Name, brand, notes (Supabase + React Query)
+- Product pages: Title, brand, description, images, price, performance stats, Fragrantica link
+- Affiliate links:
+  - Appends your `VITE_AMAZON_TAG` to Buy links automatically
+  - Fallback: opens a tagged Amazon ZA search when `amazon_url` is missing
+  - Clicks and views tracked in `analytics`
+- Wishlist: Heart toggle (auth‑gated via Supabase Auth)
+- Reviews: One review per user per perfume (rating + optional text)
+- Trending: Based on `view_count`
+- Admin plumbing: Search event logging in `analytics`
+- Images:
+  - Primary from `perfumes.image_url`
+  - Daily Amazon image scraper (optional)
+  - Curated overrides via `scripts/imageOverrides.json`
+  - Safe UI fallback if an image fails to load
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- Frontend: Vite + React + TypeScript + Tailwind + shadcn‑ui
+- Data/Auth: Supabase (RLS enabled)
+- State/Data fetching: React Query
+- Routing: React Router
+- Tooling: ESLint, Prettier
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/06e3d96e-eb7e-4c57-b01a-a567f44d583e) and start prompting.
+## Database
 
-Changes made via Lovable will be committed automatically to this repo.
+Supabase schema includes:
+- `perfumes`: core catalog (name, brand, price, image_url, amazon_url, amazon_asin, notes, longevity/sillage/projection, counters)
+- `reviews`: user reviews (one per user per perfume)
+- `wishlists`: user wishlists
+- `analytics`: events (view, search, affiliate_click)
 
-**Use your preferred IDE**
+Migrations live under `supabase/migrations/`. Apply them to your Supabase project before running the app.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+```bash
+# 1) Install deps
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 2) Create .env (see variables below)
+cp .env .env.local  # or create manually
+
+# 3) Start dev server
 npm run dev
+
+# 4) Production build & preview
+npm run build
+npm run preview -- --port 5176 --open
 ```
 
-**Edit a file directly in GitHub**
+## Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Frontend/runtime:
+- `VITE_AMAZON_TAG` (optional for now): Your Amazon Associates tag (ZA)
 
-**Use GitHub Codespaces**
+Scripts/server (required for scrapers and upserts):
+- `SUPABASE_URL`: Your Supabase project URL
+- `SUPABASE_ANON_KEY`: Publishable anon key (frontend)
+- `SUPABASE_SERVICE_ROLE_KEY`: Service key (server scripts only)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Optional scraping helpers:
+- `SCRAPE_API_KEY`: Abstract Scrape API key (HTML proxy)
+- `OXYLABS_USERNAME` / `OXYLABS_PASSWORD`: Oxylabs Realtime API
+- Amazon session helpers (if needed for Puppeteer):
+  - `AMZ_COOKIE_SESSION_ID`, `AMZ_COOKIE_SESSION_ID_TIME`, `AMZ_COOKIE_SESSION_TOKEN`, `AMZ_COOKIE_UBID_ACZA`
+  - `AMZ_POSTAL_CODE` (e.g., 0046) to set delivery location
 
-## What technologies are used for this project?
+## Scripts
 
-This project is built with:
+General:
+- `dev`: Start Vite dev server
+- `build`: Production build
+- `preview`: Serve the production build locally
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Scraping & utilities (server‑side; require service role key):
+- `scrape:catalog`: Amazon ZA catalog via HTTP + optional `SCRAPE_API_KEY`
+  - Examples:
+    - Dry run: `npm run scrape:catalog -- --query "Creed perfume" --pages 1 --dry-run`
+    - Bulk defaults: `npm run scrape:catalog -- --pages 2`
+- `scrape:catalog:puppeteer`: Puppeteer fallback with stealth + optional cookies/postcode
+  - Example: `AMZ_POSTAL_CODE=0046 npm run scrape:catalog:puppeteer -- --query "Creed perfume" --pages 1 --dry-run`
+- `scrape:images`: Product‑page image scraper (Amazon ZA)
+  - Fill missing: `npm run scrape:images`
+  - Force refresh all with links: `npm run scrape:images -- --force`
+  - Dry run: `npm run scrape:images -- --dry-run`
+- `images:apply-overrides`: Apply curated `imageOverrides.json` to `perfumes.image_url`
 
-## How can I deploy this project?
+Curated image overrides:
+- Edit `scripts/imageOverrides.json` to pin exact images (e.g., Unsplash/Pexels/Pixabay).
+- Apply: `npm run images:apply-overrides`
 
-Simply open [Lovable](https://lovable.dev/projects/06e3d96e-eb7e-4c57-b01a-a567f44d583e) and click on Share -> Publish.
+## Affiliate Behavior
 
-## Can I connect a custom domain to my Lovable project?
+- All Buy URLs are wrapped by a helper to append/replace the `tag` query param with `VITE_AMAZON_TAG`.
+- If a product lacks `amazon_url`, the Buy button opens a tagged Amazon ZA search for `brand + name` to preserve monetization.
 
-Yes, you can!
+## Deploy
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Frontend: Vercel or Netlify (static build from `dist/`)
+- Scripts/cron: Railway or Render (Node scripts on schedule)
+- CDN: Cloudflare (optional)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Roadmap
+
+- Integrate Amazon PA‑API (after Associates approval + 3 qualifying sales)
+- Admin analytics dashboard (top searches/pages/clicks)
+- Optional AI blog automation via n8n
+
+## Notes
+
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser; use it only for server‑side scripts.
+- Scraping Amazon directly can be blocked; use provider APIs or cookies/postcode when necessary.
