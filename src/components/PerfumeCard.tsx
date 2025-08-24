@@ -32,12 +32,14 @@ export const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
       .update({ affiliate_clicks: (perfume.affiliate_clicks || 0) + 1 })
       .eq("id", perfume.id);
 
-    // Open Amazon link with affiliate tag
+    // Open Amazon link with affiliate tag, or fallback to tagged search
     if (perfume.amazon_url) {
       const tagged = appendAmazonTag(perfume.amazon_url);
       window.open(tagged, "_blank");
     } else {
-      toast.error("Amazon link not available");
+      const q = encodeURIComponent(`${perfume.brand} ${perfume.name}`);
+      const searchUrl = appendAmazonTag(`https://www.amazon.co.za/s?k=${q}`);
+      window.open(searchUrl, "_blank");
     }
   };
 

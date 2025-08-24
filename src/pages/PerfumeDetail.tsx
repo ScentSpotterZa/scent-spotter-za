@@ -82,7 +82,9 @@ const PerfumeDetail = () => {
       const tagged = appendAmazonTag(perfume.amazon_url);
       window.open(tagged, "_blank");
     } else {
-      toast.error("Amazon link not available");
+      const q = encodeURIComponent(`${perfume.brand} ${perfume.name}`);
+      const searchUrl = appendAmazonTag(`https://www.amazon.co.za/s?k=${q}`);
+      window.open(searchUrl, "_blank");
     }
   };
 
