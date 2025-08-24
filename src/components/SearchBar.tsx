@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
@@ -10,13 +11,15 @@ interface SearchBarProps {
 }
 
 export const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(defaultValue);
   const navigate = useNavigate();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (query) {
+      // Log analytics (fire-and-forget)
+      supabase.from("analytics").insert({ event_type: "search", search_query: query }).then(() => {}).catch(() => {});
       if (onSearch) {
         onSearch(query);
       } else {

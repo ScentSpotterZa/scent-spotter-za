@@ -18,6 +18,11 @@ import {
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useReviews } from "@/hooks/useReviews";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { appendAmazonTag } from "@/lib/affiliate";
 
 const PerfumeDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +60,11 @@ const PerfumeDetail = () => {
     );
   }
 
+  const { isWishlisted, toggleWishlist } = useWishlist(perfume.id);
+  const { reviews, myReview, submitReview } = useReviews(perfume.id);
+  const [rating, setRating] = useState<number>(myReview?.rating || 5);
+  const [reviewText, setReviewText] = useState<string>(myReview?.review_text || "");
+
   const handleAmazonClick = async () => {
     // Track affiliate click
     await supabase.from("analytics").insert({
@@ -69,17 +79,31 @@ const PerfumeDetail = () => {
       .eq("id", perfume.id);
 
     if (perfume.amazon_url) {
-      window.open(perfume.amazon_url, "_blank");
+      const tagged = appendAmazonTag(perfume.amazon_url);
+      window.open(tagged, "_blank");
     } else {
-      toast.error("Amazon link not available");
+      const q = encodeURIComponent(`${perfume.brand} ${perfume.name}`);
+      const searchUrl = appendAmazonTag(`https://www.amazon.co.za/s?k=${q}`);
+      window.open(searchUrl, "_blank");
     }
   };
 
   const handleFragranticaClick = () => {
-    if (perfume.fragrantica_url) {
-      window.open(perfume.fragrantica_url, "_blank");
+    const fallbackQuery = encodeURIComponent(`${perfume.brand} ${perfume.name}`);
+    const url = perfume.fragrantica_url || `https://www.fragrantica.com/search/?query=${fallbackQuery}`;
+    window.open(url, "_blank");
+  };
+
+  const handleWishlistClick = async () => {
+    if (!user) {
+      toast.error("Please sign in to use wishlist");
+      return;
+    }
+    const res = await toggleWishlist();
+    if (!res.ok) {
+      toast.error(typeof res.reason === 'string' ? res.reason : "Could not update wishlist");
     } else {
-      toast.error("Fragrantica link not available");
+      toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
     }
   };
 
@@ -117,6 +141,7 @@ const PerfumeDetail = () => {
                 src={perfume.image_url || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&h=600&fit=crop"}
                 alt={`${perfume.brand} ${perfume.name}`}
                 className="w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&h=600&fit=crop"; }}
               />
             </div>
 
@@ -167,8 +192,8 @@ const PerfumeDetail = () => {
                   Buy on Amazon ZA
                   <ExternalLink className="h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Heart className="h-5 w-5" />
+                <Button variant="outline" size="lg" onClick={handleWishlistClick}>
+                  <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-accent text-accent' : ''}`} />
                 </Button>
               </div>
             </div>
@@ -246,6 +271,64 @@ const PerfumeDetail = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* User Reviews */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">User Reviews</h3>
+              <div className="space-y-3">
+                {reviews.length === 0 ? (
+                  <p className="text-muted-foreground">No reviews yet.</p>
+                ) : (
+                  reviews.map((r) => (
+                    <div key={r.id} className="border border-border/50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Star className="h-4 w-4 fill-accent text-accent" />
+                        <span className="font-medium">{r.rating}/5</span>
+                        <span className="text-muted-foreground ml-2">{new Date(r.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {r.review_text && (
+                        <p className="text-sm mt-2 text-foreground">{r.review_text}</p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {user ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    {[1,2,3,4,5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setRating(n)}
+                        className={`h-8 w-8 rounded-md border ${rating >= n ? 'bg-accent/20 border-accent' : 'border-border/50'}`}
+                        aria-label={`Rate ${n}`}
+                      >
+                        <Star className={`mx-auto h-4 w-4 ${rating >= n ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                      </button>
+                    ))}
+                    <span className="text-sm text-muted-foreground">{rating}/5</span>
+                  </div>
+                  <Textarea
+                    placeholder="Share your thoughts (optional)"
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                  />
+                  <Button
+                    onClick={async () => {
+                      const res = await submitReview({ rating, review_text: reviewText });
+                      if (!res.ok) toast.error("Could not submit review");
+                      else toast.success("Review saved");
+                    }}
+                  >
+                    Submit Review
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Sign in to leave a review.</p>
+              )}
             </div>
 
             {/* Categories */}
