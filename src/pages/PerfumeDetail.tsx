@@ -139,6 +139,7 @@ const PerfumeDetail = () => {
                 src={perfume.image_url || "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&h=600&fit=crop"}
                 alt={`${perfume.brand} ${perfume.name}`}
                 className="w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&h=600&fit=crop"; }}
               />
             </div>
 
