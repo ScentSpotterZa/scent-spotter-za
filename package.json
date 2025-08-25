@@ -13,7 +13,8 @@
     "scrape:images:asin": "node scripts/scrapeAmazonImages.js",
     "images:apply-overrides": "node scripts/applyImageOverrides.js",
     "scrape:catalog": "node scripts/scrapeAmazonCatalog.js",
-    "scrape:catalog:puppeteer": "node scripts/scrapeAmazonCatalogPuppeteer.js"
+    "scrape:catalog:puppeteer": "node scripts/scrapeAmazonCatalogPuppeteer.js",
+    "import:excel": "node scripts/importExcelToSupabase.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -54,6 +55,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.1",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^4.4.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
