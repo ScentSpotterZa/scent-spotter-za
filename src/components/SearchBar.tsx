@@ -18,8 +18,8 @@ export const SearchBar = ({ onSearch, defaultValue = "" }: SearchBarProps) => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (query) {
-      // Log analytics (fire-and-forget)
-      supabase.from("analytics").insert({ event_type: "search", search_query: query }).then(() => {}).catch(() => {});
+      // Log analytics (fire-and-forget)  
+      supabase.from("analytics").insert({ event_type: "search", search_query: query });
       if (onSearch) {
         onSearch(query);
       } else {
