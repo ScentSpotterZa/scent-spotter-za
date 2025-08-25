@@ -13,7 +13,9 @@
     "scrape:images:asin": "node scripts/scrapeAmazonImages.js",
     "images:apply-overrides": "node scripts/applyImageOverrides.js",
     "scrape:catalog": "node scripts/scrapeAmazonCatalog.js",
-    "scrape:catalog:puppeteer": "node scripts/scrapeAmazonCatalogPuppeteer.js"
+    "scrape:catalog:puppeteer": "node scripts/scrapeAmazonCatalogPuppeteer.js",
+    "import:perfumes:dry": "node scripts/importPerfumesFromExcel.js --dry-run",
+    "import:perfumes": "node scripts/importPerfumesFromExcel.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -72,6 +74,7 @@
     "tailwindcss-animate": "^1.0.7",
     "undici": "^7.15.0",
     "vaul": "^0.9.9",
+    "xlsx": "^0.18.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
