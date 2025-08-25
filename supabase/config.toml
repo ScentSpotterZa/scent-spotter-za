@@ -1,1 +1,4 @@
 project_id = "lolyroqkauhzzfktrher"
+
+[functions.import-amazon-data]
+verify_jwt = false
